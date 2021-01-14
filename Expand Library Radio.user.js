@@ -88,24 +88,7 @@ function songDetailsWithMp3From(expandLibrarySong) {
 }
 
 function addExpandRadioButton() {
-    var openRadioButton = document.createElement("div")
-    openRadioButton.id = "openRadioButton"
-    openRadioButton.className = "button"
-    openRadioButton.style.width = "12px"
-    openRadioButton.style.height = "52px"
-    openRadioButton.style.background = "#424242"
-    openRadioButton.style.boxShadow = "0 0 10px 2px rgb(0, 0, 0)"
-    openRadioButton.style.position = "absolute"
-    openRadioButton.style.top = "5%"
-    openRadioButton.onclick = expandRadioOverlay
-
-    var openRadioButtonIcon = document.createElement("div")
-    openRadioButtonIcon.innerHTML = "▶"
-    openRadioButtonIcon.style.color = "#d9d9d9"
-    openRadioButtonIcon.style.position = "absolute"
-    openRadioButtonIcon.style.top = "16px"
-    openRadioButton.append(openRadioButtonIcon)
-
+    var openRadioButton = createExpandLibraryButton()
     document.body.append(openRadioButton)
 }
 
@@ -140,44 +123,11 @@ function addRadioOverlay() {
     document.body.append(radioOverlay)
 }
 
-function createDiv(id) {
+function createDiv(id = "", className = "") {
     var div = document.createElement("div")
     div.id = id
+    div.className = className
     return div
-}
-
-function createRadioOverlay() {
-    var radioOverlay = createDiv("radioOverlay")
-    radioOverlay.style.cssText = radioOverlayStyle()
-
-    radioOverlay.append(createPlayerTitle())
-    radioOverlay.append(createSongInformationLabel())
-    radioOverlay.append(createPlayerButtons())
-    radioOverlay.append(createCollapseButton())
-    radioOverlay.append(createSettingsButton())
-    radioOverlay.append(createRadioPlayer())
-    return radioOverlay
-}
-
-function radioOverlayStyle() {
-    return [
-        "width: 150px",
-        "height: 52px",
-        "background: rgb(66, 66, 66)",
-        "box-shadow: 0 0 10px 2px rgb(0, 0, 0)",
-        "position: absolute",
-        "top: 5%",
-        "visibility: hidden"
-    ].join(";")
-}
-
-function createPlayerTitle() {
-    var playerTitleLabel = document.createElement("div")
-    playerTitleLabel.style.color = "#d9d9d9"
-    playerTitleLabel.style.textAlign = "center"
-    playerTitleLabel.innerHTML = "Now Playing"
-
-    return playerTitleLabel
 }
 
 function createSongInformationLabel() {
@@ -490,4 +440,76 @@ function shouldAutoplayOnLaunch() {
 
 function changeAutoplayOnLaunchSetting() {
     document.cookie = "shouldAutoplayOnLaunch=" + (!shouldAutoplayOnLaunch()).toString()
+}
+
+// UI Elements
+function createExpandLibraryButton() {
+    var openRadioButton = createDiv("openRadioButton", "button")
+    openRadioButton.style.cssText = openRadioButtonStyle()
+    openRadioButton.onclick = expandRadioOverlay
+
+    var openRadioButtonIcon = createDiv()
+    openRadioButtonIcon.innerHTML = "▶"
+    openRadioButtonIcon.style.cssText = openRadioButtonIconStyle()
+    openRadioButton.append(openRadioButtonIcon)
+    return openRadioButton
+}
+
+function createRadioOverlay() {
+    var radioOverlay = createDiv("radioOverlay")
+    radioOverlay.style.cssText = radioOverlayStyle()
+
+    radioOverlay.append(createPlayerTitle())
+    radioOverlay.append(createSongInformationLabel())
+    radioOverlay.append(createPlayerButtons())
+    radioOverlay.append(createCollapseButton())
+    radioOverlay.append(createSettingsButton())
+    radioOverlay.append(createRadioPlayer())
+    return radioOverlay
+}
+
+function createPlayerTitle() {
+    var playerTitleLabel = createDiv()
+    playerTitleLabel.innerHTML = "Now Playing"
+    playerTitleLabel.style.cssText = playerTitleStyle()
+    return playerTitleLabel
+}
+
+// Styles
+function openRadioButtonStyle() {
+    return [
+        "width: 12px",
+        "height: 52px",
+        "background: #424242",
+        "box-shadow: 0 0 10px 2px rgb(0, 0, 0)",
+        "position: absolute",
+        "top: 5%"
+    ].join(";")
+}
+
+function openRadioButtonIconStyle() {
+    return [
+        "color: #d9d9d9",
+        "position: absolute",
+        "top: 16px"
+    ].join(";")
+}
+
+function radioOverlayStyle() {
+    return [
+        "width: 150px",
+        "height: 52px",
+        "background: rgb(66, 66, 66)",
+        "box-shadow: 0 0 10px 2px rgb(0, 0, 0)",
+        "position: absolute",
+        "top: 5%",
+        "visibility: hidden"
+    ].join(";")
+}
+
+function playerTitleStyle() {
+    return [
+        "color: #d9d9d9",
+        "text-align: center"
+    ].join(";")
 }
