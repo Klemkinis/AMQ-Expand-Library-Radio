@@ -136,16 +136,19 @@ function addAnimationStyle() {
 }
 
 function addRadioOverlay() {
+    var radioOverlay = createRadioOverlay()
+    document.body.append(radioOverlay)
+}
 
-    var radioOverlay = document.createElement("div")
-    radioOverlay.id = "radioOverlay"
-    radioOverlay.style.width = "150px"
-    radioOverlay.style.height = "52px"
-    radioOverlay.style.background = "#424242"
-    radioOverlay.style.boxShadow = "0 0 10px 2px rgb(0, 0, 0)"
-    radioOverlay.style.position = "absolute"
-    radioOverlay.style.top = "5%"
-    radioOverlay.style.visibility = "hidden"
+function createDiv(id) {
+    var div = document.createElement("div")
+    div.id = id
+    return div
+}
+
+function createRadioOverlay() {
+    var radioOverlay = createDiv("radioOverlay")
+    radioOverlay.style.cssText = radioOverlayStyle()
 
     radioOverlay.append(createPlayerTitle())
     radioOverlay.append(createSongInformationLabel())
@@ -153,8 +156,19 @@ function addRadioOverlay() {
     radioOverlay.append(createCollapseButton())
     radioOverlay.append(createSettingsButton())
     radioOverlay.append(createRadioPlayer())
+    return radioOverlay
+}
 
-    document.body.append(radioOverlay)
+function radioOverlayStyle() {
+    return [
+        "width: 150px",
+        "height: 52px",
+        "background: rgb(66, 66, 66)",
+        "box-shadow: 0 0 10px 2px rgb(0, 0, 0)",
+        "position: absolute",
+        "top: 5%",
+        "visibility: hidden"
+    ].join(";")
 }
 
 function createPlayerTitle() {
