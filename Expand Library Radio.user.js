@@ -5,8 +5,7 @@
 // ==/UserScript==
 
 (function() {
-
-    if (document.getElementById('startPage')) {
+    if (document.getElementById("startPage")) {
         return
     }
 
@@ -15,27 +14,23 @@
     addRadioOverlay()
     createRadioSettings()
     loadExpandLibrary()
-})();
-
+})()
 
 var allAnimeSongDetailsList
 var isFirstTimeLaunch = true
 var shouldAutoplayAfterLoading = shouldAutoplayOnLaunch()
 
 function loadExpandLibrary() {
-
-    if (document.getElementById('loadingScreen').className != "gamePage hidden") {
+    if (document.getElementById("loadingScreen").className !== "gamePage hidden") {
         setTimeout(loadExpandLibrary, 3000)
         return
     }
 
     let expandLibraryEntryListener = new Listener("expandLibrary questions", function (payload) {
-
-        if (payload.success == false) {
+        if (payload.success === false) {
             console.log("Failed expand library loading")
             return
         }
-
         updateAllAnimeSongDetailsListUsing(payload.questions)
     }).bindListener()
 
@@ -46,7 +41,6 @@ function loadExpandLibrary() {
 }
 
 function updateAllAnimeSongDetailsListUsing(animeList) {
-
     allAnimeSongDetailsList = []
 
     for (var anime of animeList) {
@@ -66,7 +60,6 @@ function updateAllAnimeSongDetailsListUsing(animeList) {
 }
 
 function songDetailsListFrom(animeEntry) {
-
     let expandLibrarySongList = animeEntry.songs
     var animeSongDetailsList = []
 
@@ -85,7 +78,6 @@ function songDetailsListFrom(animeEntry) {
 }
 
 function songDetailsWithMp3From(expandLibrarySong) {
-
     var songDetails = {
         title: expandLibrarySong.name,
         artist: expandLibrarySong.artist,
@@ -94,9 +86,6 @@ function songDetailsWithMp3From(expandLibrarySong) {
 
     return songDetails
 }
-
-
-
 
 function addExpandRadioButton() {
     var openRadioButton = document.createElement("div")
@@ -121,29 +110,28 @@ function addExpandRadioButton() {
 }
 
 function addAnimationStyle() {
-
     var scrollingAnimationStyle = document.createElement("style")
-    scrollingAnimationStyle.innerHTML =`
-@-moz-keyframes songTitleScroll {
-0%   { -moz-transform: translateX(150px); }
-100% { -moz-transform: translateX(-100%); }
-}
-@-webkit-keyframes songTitleScroll {
-0%   { -webkit-transform: translateX(150px); }
-100% { -webkit-transform: translateX(-100%); }
-}
-@keyframes songTitleScroll {
-0%   {
--moz-transform: translateX(150px);
--webkit-transform: translateX(150px);
-transform: translateX(150px);
-}
-100% {
--moz-transform: translateX(-100%);
--webkit-transform: translateX(-100%);
-transform: translateX(-100%);
-}
-}`
+    scrollingAnimationStyle.innerHTML = `
+        @-moz-keyframes songTitleScroll {
+        0%   { -moz-transform: translateX(150px); }
+        100% { -moz-transform: translateX(-100%); }
+        }
+        @-webkit-keyframes songTitleScroll {
+        0%   { -webkit-transform: translateX(150px); }
+        100% { -webkit-transform: translateX(-100%); }
+        }
+        @keyframes songTitleScroll {
+        0%   {
+        -moz-transform: translateX(150px);
+        -webkit-transform: translateX(150px);
+        transform: translateX(150px);
+        }
+        100% {
+        -moz-transform: translateX(-100%);
+        -webkit-transform: translateX(-100%);
+        transform: translateX(-100%);
+        }
+        }`
     document.head.append(scrollingAnimationStyle)
 }
 
@@ -179,7 +167,6 @@ function createPlayerTitle() {
 }
 
 function createSongInformationLabel() {
-
     var songInformationLabelWrapper = document.createElement("div")
     songInformationLabelWrapper.id = "radioSongInformationWrapper"
     songInformationLabelWrapper.className = "radioSongInformationWrapper"
@@ -211,7 +198,6 @@ function createSongInformationLabel() {
 }
 
 function createPlayerButtons() {
-
     var buttonRow = document.createElement("div")
     buttonRow.id = "radioButtonRow"
     buttonRow.style.textAlign = "center"
@@ -293,21 +279,19 @@ function createRadioPlayer() {
     return radioPlayer
 }
 
-
-
 function expandRadioOverlay() {
-    var radioOverlay = document.getElementById('radioOverlay')
+    var radioOverlay = document.getElementById("radioOverlay")
     radioOverlay.style.visibility = "visible"
 
-    var openRadioButton = document.getElementById('openRadioButton')
+    var openRadioButton = document.getElementById("openRadioButton")
     openRadioButton.style.visibility = "hidden"
 }
 
 function collapseRadioOverlay() {
-    var radioOverlay = document.getElementById('radioOverlay')
+    var radioOverlay = document.getElementById("radioOverlay")
     radioOverlay.style.visibility = "hidden"
 
-    var openRadioButton = document.getElementById('openRadioButton')
+    var openRadioButton = document.getElementById("openRadioButton")
     openRadioButton.style.visibility = "visible"
 }
 
@@ -322,17 +306,17 @@ function queueRandomSong() {
 }
 
 function showPauseButton() {
-    var radioPlayerPlayButtonIcon = document.getElementById('radioPlayButton').children[0]
+    var radioPlayerPlayButtonIcon = document.getElementById("radioPlayButton").children[0]
     radioPlayerPlayButtonIcon.className = "fa fa-pause"
 }
 
 function showPlayButton() {
-    var radioPlayerPlayButtonIcon = document.getElementById('radioPlayButton').children[0]
+    var radioPlayerPlayButtonIcon = document.getElementById("radioPlayButton").children[0]
     radioPlayerPlayButtonIcon.className = "fa fa-play"
 }
 
 function pauseOrPlay() {
-    let radioPlayer = document.getElementById('radioPlayer')
+    let radioPlayer = document.getElementById("radioPlayer")
 
     if (radioPlayer.paused) {
         radioPlayer.play()
@@ -346,27 +330,21 @@ function randomSongIndex(songCount) {
 }
 
 function play(song) {
-
-    var radioPlayer = document.getElementById('radioPlayer')
+    var radioPlayer = document.getElementById("radioPlayer")
     queue(song)
     radioPlayer.play()
 }
 
 function queue(song) {
-    var radioPlayer = document.getElementById('radioPlayer')
+    var radioPlayer = document.getElementById("radioPlayer")
     radioPlayer.src = song.mp3Link
 
-    var songInformationLabel = document.getElementById('radioSongInformationLabel')
+    var songInformationLabel = document.getElementById("radioSongInformationLabel")
     songInformationLabel.innerHTML = song.title + " by " + song.artist
 
-    var popoverElement = document.getElementById('radioSongInformationWrapper')
+    var popoverElement = document.getElementById("radioSongInformationWrapper")
     popoverElement.setAttribute("data-content", song.anime)
 }
-
-
-
-
-
 
 function createRadioSettings() {
     createRadioSettingsWindow()
@@ -382,7 +360,6 @@ function createRadioSettingBackdrop() {
 }
 
 function createRadioSettingsWindow() {
-
     var radioSettingsWindow = document.createElement("div")
     radioSettingsWindow.className = "modal fade"
     radioSettingsWindow.id = "radioSettingsModal"
@@ -463,23 +440,23 @@ function createRadioSettingsBody() {
 }
 
 function openRadioSettings() {
-    var radioSettingsWindow = document.getElementById('radioSettingsModal')
+    var radioSettingsWindow = document.getElementById("radioSettingsModal")
     radioSettingsWindow.style.display = "block"
-    setTimeout(function(){ radioSettingsWindow.className = "modal fade in" }, 10)
+    setTimeout(function() { radioSettingsWindow.className = "modal fade in" }, 10)
 
-    var radioSettingsBackdrop = document.getElementById('radioSettingsBackdrop')
+    var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
     radioSettingsBackdrop.style.display = "block"
-    setTimeout(function(){ radioSettingsBackdrop.className = "modal-backdrop fade in" }, 10)
+    setTimeout(function() { radioSettingsBackdrop.className = "modal-backdrop fade in" }, 10)
 }
 
 function closeRadioSettings() {
-    var radioSettingsWindow = document.getElementById('radioSettingsModal')
+    var radioSettingsWindow = document.getElementById("radioSettingsModal")
     radioSettingsWindow.className = "modal fade out"
-    setTimeout(function(){ radioSettingsWindow.style.display = "none" }, 500)
+    setTimeout(function() { radioSettingsWindow.style.display = "none" }, 500)
 
-    var radioSettingsBackdrop = document.getElementById('radioSettingsBackdrop')
+    var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
     radioSettingsBackdrop.className = "modal-backdrop fade out"
-    setTimeout(function(){ radioSettingsBackdrop.style.display = "none" }, 500)
+    setTimeout(function() { radioSettingsBackdrop.style.display = "none" }, 500)
 }
 
 function shouldAutoplayOnLaunch() {
@@ -494,7 +471,7 @@ function shouldAutoplayOnLaunch() {
     }
 
     var cookieValue = shouldAutoplayOnLaunchCookie.substring(cookieKey.length + 2)
-    return cookieValue == "true"
+    return cookieValue === "true"
 }
 
 function changeAutoplayOnLaunchSetting() {
