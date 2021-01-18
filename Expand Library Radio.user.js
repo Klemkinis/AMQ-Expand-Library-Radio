@@ -161,59 +161,6 @@ function createSongInformationLabel() {
     return songInformationLabelWrapper
 }
 
-function createPlayerButtons() {
-    var buttonRow = document.createElement("div")
-    buttonRow.id = "radioButtonRow"
-    buttonRow.style.textAlign = "center"
-
-    var playButton = document.createElement("div")
-    playButton.id = "radioPlayButton"
-    playButton.className = "button"
-    playButton.style.width = "15px"
-    playButton.style.paddingRight = "5px"
-    playButton.style.display = "inline"
-    playButton.onclick = pauseOrPlay
-
-    var playButtonIcon = document.createElement("i")
-    playButtonIcon.className = "fa fa-play"
-    playButtonIcon.style.color = "#d9d9d9"
-    playButtonIcon.style.fontSize = "15px"
-    playButtonIcon.style.verticalAlign = "text-top"
-
-    playButton.append(playButtonIcon)
-    buttonRow.append(playButton)
-
-    var nextSongButton = document.createElement("div")
-    nextSongButton.id = "radioPlayButton"
-    nextSongButton.className = "button"
-    nextSongButton.style.width = "15px"
-    nextSongButton.style.display = "inline-block"
-    nextSongButton.onclick = playRandomSong
-
-    var nextSongButtonIcon = document.createElement("i")
-    nextSongButtonIcon.className = "fa fa-fast-forward"
-    nextSongButtonIcon.style.color = "#d9d9d9"
-    nextSongButtonIcon.style.fontSize = "17px"
-    nextSongButtonIcon.style.verticalAlign = "top"
-
-    nextSongButton.append(nextSongButtonIcon)
-    buttonRow.append(nextSongButton)
-
-    return buttonRow
-}
-
-function createCollapseButton() {
-    var collapseButton = document.createElement("div")
-    collapseButton.className = "button"
-    collapseButton.style.position = "absolute"
-    collapseButton.style.right = "5px"
-    collapseButton.style.top = "0px"
-    collapseButton.innerHTML = "✖"
-    collapseButton.onclick = collapseRadioOverlay
-
-    return collapseButton
-}
-
 function createSettingsButton() {
     var settingsButton = document.createElement("div")
     settingsButton.className = "button"
@@ -475,6 +422,46 @@ function createPlayerTitle() {
     return playerTitleLabel
 }
 
+function createPlayerButtons() {
+    var buttonRow = createDiv("radioButtonRow")
+    buttonRow.style.cssText = playerButtonRowStyle()
+    buttonRow.append(createPlayButton())
+    buttonRow.append(createNextSongButton())
+    return buttonRow
+}
+
+function createPlayButton() {
+    var playButton = createDiv("radioPlayButton", "button")
+    playButton.style.cssText = playerButtonStyle()
+    playButton.onclick = pauseOrPlay
+
+    var playButtonIcon = createDiv("playButtonIcon", "fa fa-play")
+    playButtonIcon.style.cssText = playerButtonIconStyle()
+
+    playButton.append(playButtonIcon)
+    return playButton
+}
+
+function createNextSongButton() {
+    var nextSongButton = createDiv("radioNextSongButton", "button")
+    nextSongButton.style.cssText = playerButtonStyle()
+    nextSongButton.onclick = playRandomSong
+
+    var nextSongButtonIcon = createDiv("nextSongButtonIcon", "fa fa-fast-forward")
+    nextSongButtonIcon.style.cssText = playerButtonIconStyle()
+
+    nextSongButton.append(nextSongButtonIcon)
+    return nextSongButton
+}
+
+function createCollapseButton() {
+    var collapseButton = createDiv("collapseButton", "button")
+    collapseButton.style.cssText = collapseButtonStyle()
+    collapseButton.innerHTML = "✖"
+    collapseButton.onclick = collapseRadioOverlay
+    return collapseButton
+}
+
 // Styles
 function openRadioButtonStyle() {
     return [
@@ -511,5 +498,36 @@ function playerTitleStyle() {
     return [
         "color: #d9d9d9",
         "text-align: center"
+    ].join(";")
+}
+
+function playerButtonRowStyle() {
+    return [
+        "text-align: center"
+    ].join(";")
+}
+
+function playerButtonStyle() {
+    return [
+        "width: 15px",
+        "padding-left: 3px",
+        "padding-right: 3px",
+        "display: inline"
+    ].join(";")
+}
+
+function playerButtonIconStyle() {
+    return [
+        "color: #d9d9d9",
+        "font-size: 15px",
+        "vertical-align: text-top"
+    ].join(";")
+}
+
+function collapseButtonStyle() {
+    return [
+        "position: absolute",
+        "right: 5px",
+        "top: 0px"
     ].join(";")
 }
