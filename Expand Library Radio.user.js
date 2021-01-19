@@ -123,63 +123,6 @@ function addRadioOverlay() {
     document.body.append(radioOverlay)
 }
 
-function createDiv(id = "", className = "") {
-    var div = document.createElement("div")
-    div.id = id
-    div.className = className
-    return div
-}
-
-function createSongInformationLabel() {
-    var songInformationLabelWrapper = document.createElement("div")
-    songInformationLabelWrapper.id = "radioSongInformationWrapper"
-    songInformationLabelWrapper.className = "radioSongInformationWrapper"
-    songInformationLabelWrapper.style.width = "90%"
-    songInformationLabelWrapper.style.left = "5%"
-    songInformationLabelWrapper.style.position = "relative"
-    songInformationLabelWrapper.style.overflow = "hidden"
-
-    songInformationLabelWrapper.setAttribute("data-toggle", "popover")
-    songInformationLabelWrapper.setAttribute("data-trigger", "hover")
-    songInformationLabelWrapper.setAttribute("data-content", "")
-    songInformationLabelWrapper.setAttribute("data-placement", "right")
-    songInformationLabelWrapper.setAttribute("data-container", "body")
-
-    var songInformationLabel = document.createElement("div")
-    songInformationLabel.id = "radioSongInformationLabel"
-    songInformationLabelWrapper.className = "radioSongInformationLabel"
-    songInformationLabel.style.color = "#d9d9d9"
-    songInformationLabel.style.whiteSpace = "nowrap"
-    songInformationLabel.style.fontSize = "10px"
-    songInformationLabel.style.width = "fit-content"
-    songInformationLabel.style.transform = "translateX(100%)"
-    songInformationLabel.style.animation = "songTitleScroll 15s linear infinite"
-
-    songInformationLabel.innerHTML = "Loading"
-    songInformationLabelWrapper.append(songInformationLabel)
-
-    return songInformationLabelWrapper
-}
-
-function createSettingsButton() {
-    var settingsButton = document.createElement("div")
-    settingsButton.className = "button"
-    settingsButton.style.position = "absolute"
-    settingsButton.style.right = "3px"
-    settingsButton.style.bottom = "0px"
-
-    var settingsButtonIcon = document.createElement("i")
-    settingsButtonIcon.className = "fa fa-cog"
-    settingsButtonIcon.style.color = "#d9d9d9"
-    settingsButtonIcon.style.fontSize = "17px"
-    settingsButtonIcon.style.verticalAlign = "top"
-
-    settingsButton.append(settingsButtonIcon)
-    settingsButton.onclick = openRadioSettings
-
-    return settingsButton
-}
-
 function createRadioPlayer() {
     var radioPlayer = document.createElement("audio")
     radioPlayer.id = "radioPlayer"
@@ -390,6 +333,13 @@ function changeAutoplayOnLaunchSetting() {
 }
 
 // UI Elements
+function createDiv(id = "", className = "") {
+    var div = document.createElement("div")
+    div.id = id
+    div.className = className
+    return div
+}
+
 function createExpandLibraryButton() {
     var openRadioButton = createDiv("openRadioButton", "button")
     openRadioButton.style.cssText = openRadioButtonStyle()
@@ -407,7 +357,7 @@ function createRadioOverlay() {
     radioOverlay.style.cssText = radioOverlayStyle()
 
     radioOverlay.append(createPlayerTitle())
-    radioOverlay.append(createSongInformationLabel())
+    radioOverlay.append(createSongInformationContainer())
     radioOverlay.append(createPlayerButtons())
     radioOverlay.append(createCollapseButton())
     radioOverlay.append(createSettingsButton())
@@ -420,6 +370,26 @@ function createPlayerTitle() {
     playerTitleLabel.innerHTML = "Now Playing"
     playerTitleLabel.style.cssText = playerTitleStyle()
     return playerTitleLabel
+}
+
+function createSongInformationContainer() {
+    var songInformationLabelWrapper = createDiv("radioSongInformationWrapper", "radioSongInformationWrapper")
+    songInformationLabelWrapper.setAttribute("data-toggle", "popover")
+    songInformationLabelWrapper.setAttribute("data-trigger", "hover")
+    songInformationLabelWrapper.setAttribute("data-content", "")
+    songInformationLabelWrapper.setAttribute("data-placement", "right")
+    songInformationLabelWrapper.setAttribute("data-container", "body")
+    songInformationLabelWrapper.style.cssText = songInformationContainerStyle()
+
+    songInformationLabelWrapper.append(createSongInformationLabel())
+    return songInformationLabelWrapper
+}
+
+function createSongInformationLabel() {
+    var songInformationLabel = createDiv("radioSongInformationLabel", "radioSongInformationLabel")
+    songInformationLabel.style.cssText = songInformationStyle()
+    songInformationLabel.innerHTML = "Loading"
+    return songInformationLabel
 }
 
 function createPlayerButtons() {
@@ -462,6 +432,18 @@ function createCollapseButton() {
     return collapseButton
 }
 
+function createSettingsButton() {
+    var settingsButton = createDiv("settingsButton", "button")
+    settingsButton.style.cssText = settingsButtonStyle()
+    settingsButton.onclick = openRadioSettings
+
+    var settingsButtonIcon = createDiv("settingsButtonIcon", "fa fa-cog")
+    settingsButtonIcon.style.cssText = playerButtonIconStyle()
+
+    settingsButton.append(settingsButtonIcon)
+    return settingsButton
+}
+
 // Styles
 function openRadioButtonStyle() {
     return [
@@ -501,6 +483,26 @@ function playerTitleStyle() {
     ].join(";")
 }
 
+function songInformationContainerStyle() {
+    return [
+        "width: 90%",
+        "left: 5%",
+        "position: relative",
+        "overflow: hidden"
+    ].join(";")
+}
+
+function songInformationStyle() {
+    return [
+        "color: #d9d9d9",
+        "white-space: nowrap",
+        "font-size: 10px",
+        "width: fit-content",
+        "transform: translateX(100%)",
+        "animation: songTitleScroll 15s linear infinite"
+    ].join(";")
+}
+
 function playerButtonRowStyle() {
     return [
         "text-align: center"
@@ -529,5 +531,13 @@ function collapseButtonStyle() {
         "position: absolute",
         "right: 5px",
         "top: 0px"
+    ].join(";")
+}
+
+function settingsButtonStyle() {
+    return [
+        "position: absolute",
+        "right: 3px",
+        "bottom: #0px"
     ].join(";")
 }
