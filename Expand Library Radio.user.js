@@ -12,7 +12,7 @@
     addAnimationStyle()
     addExpandRadioButton()
     addRadioOverlay()
-    createRadioSettings()
+    addRadioSettings()
     loadExpandLibrary()
 })()
 
@@ -123,16 +123,6 @@ function addRadioOverlay() {
     document.body.append(radioOverlay)
 }
 
-function createRadioPlayer() {
-    var radioPlayer = document.createElement("audio")
-    radioPlayer.id = "radioPlayer"
-    radioPlayer.onended = playRandomSong
-    radioPlayer.onplaying = showPauseButton
-    radioPlayer.onpause = showPlayButton
-
-    return radioPlayer
-}
-
 function expandRadioOverlay() {
     var radioOverlay = document.getElementById("radioOverlay")
     radioOverlay.style.visibility = "visible"
@@ -198,99 +188,6 @@ function queue(song) {
 
     var popoverElement = document.getElementById("radioSongInformationWrapper")
     popoverElement.setAttribute("data-content", song.anime)
-}
-
-function createRadioSettings() {
-    createRadioSettingsWindow()
-    createRadioSettingBackdrop()
-}
-
-function createRadioSettingBackdrop() {
-    var settingsBackdropFade = document.createElement("div")
-    settingsBackdropFade.id = "radioSettingsBackdrop"
-    settingsBackdropFade.className = "modal-backdrop fade"
-    settingsBackdropFade.style.display = "none"
-    document.body.append(settingsBackdropFade)
-}
-
-function createRadioSettingsWindow() {
-    var radioSettingsWindow = document.createElement("div")
-    radioSettingsWindow.className = "modal fade"
-    radioSettingsWindow.id = "radioSettingsModal"
-    radioSettingsWindow.tabindex = "-1"
-    radioSettingsWindow.role = "dialog"
-    radioSettingsWindow.style.display = "none"
-
-    var radioSettingsWindowDialog = document.createElement("div")
-    radioSettingsWindowDialog.className = "modal-dialog"
-    radioSettingsWindowDialog.role = "document"
-    radioSettingsWindowDialog.style.width = "300px"
-
-    var radioSettingsWindowContent = document.createElement("div")
-    radioSettingsWindowContent.className = "modal-content"
-    radioSettingsWindowContent.append(createRadioSettingsHeader())
-    radioSettingsWindowContent.append(createRadioSettingsBody())
-
-    radioSettingsWindowDialog.append(radioSettingsWindowContent)
-    radioSettingsWindow.append(radioSettingsWindowDialog)
-    document.body.append(radioSettingsWindow)
-}
-
-function createRadioSettingsHeader() {
-    var header = document.createElement("div")
-    header.className = "modal-header"
-
-    var headerCloseButton = document.createElement("button")
-    headerCloseButton.className = "close"
-    headerCloseButton.onclick = closeRadioSettings
-
-    var headerCloseButtonIcon = document.createElement("span")
-    headerCloseButtonIcon.innerHTML = "×"
-    headerCloseButton.append(headerCloseButtonIcon)
-    header.append(headerCloseButton)
-
-    var headerTitle = document.createElement("h2")
-    headerTitle.className = "modal-title"
-    headerTitle.innerHTML = "Radio Settings"
-    header.append(headerTitle)
-
-    return header
-}
-
-function createRadioSettingsBody() {
-    var settingsBody = document.createElement("div")
-    settingsBody.className = "modal-body"
-
-    var autoplayOnLaunchSetting = document.createElement("div")
-    autoplayOnLaunchSetting.style.display = "inline-flex"
-
-    var autoplayOnLaunchTitle = document.createElement("label")
-    autoplayOnLaunchTitle.innerHTML = "Autoplay after loading"
-    autoplayOnLaunchTitle.style.paddingRight = "30px"
-    autoplayOnLaunchTitle.style.paddingLeft = "30px"
-    autoplayOnLaunchSetting.append(autoplayOnLaunchTitle)
-
-    var autoplayOnLaunchCheckboxContainer = document.createElement("div")
-    autoplayOnLaunchCheckboxContainer.className = "customCheckbox"
-
-    var autoplayOnLaunchCheckbox = document.createElement("input")
-    autoplayOnLaunchCheckbox.type = "checkbox"
-    autoplayOnLaunchCheckbox.id = "autoplayOnLaunchCheckbox"
-    autoplayOnLaunchCheckbox.checked = shouldAutoplayOnLaunch()
-    autoplayOnLaunchCheckbox.onclick = changeAutoplayOnLaunchSetting
-    autoplayOnLaunchCheckboxContainer.append(autoplayOnLaunchCheckbox)
-
-    var autoplayOnLaunchCheckedIconLabel = document.createElement("label")
-    autoplayOnLaunchCheckedIconLabel.htmlFor = "autoplayOnLaunchCheckbox"
-
-    var autoplayOnLaunchCheckedIcon = document.createElement("i")
-    autoplayOnLaunchCheckedIcon.className = "fa fa-check"
-    autoplayOnLaunchCheckedIconLabel.append(autoplayOnLaunchCheckedIcon)
-    autoplayOnLaunchCheckboxContainer.append(autoplayOnLaunchCheckedIconLabel)
-    autoplayOnLaunchSetting.append(autoplayOnLaunchCheckboxContainer)
-
-    settingsBody.append(autoplayOnLaunchSetting)
-    return settingsBody
 }
 
 function openRadioSettings() {
@@ -444,6 +341,130 @@ function createSettingsButton() {
     return settingsButton
 }
 
+function createRadioPlayer() {
+    var radioPlayer = document.createElement("audio")
+    radioPlayer.id = "radioPlayer"
+    radioPlayer.onended = playRandomSong
+    radioPlayer.onplaying = showPauseButton
+    radioPlayer.onpause = showPlayButton
+
+    return radioPlayer
+}
+
+function addRadioSettings() {
+    var radioSettingsWindow = createRadioSettingsWindow()
+    var radioSettingBackdrop = createRadioSettingBackdrop()
+
+    hide(radioSettingsWindow)
+    hide(radioSettingBackdrop)
+
+    document.body.append(radioSettingsWindow)
+    document.body.append(radioSettingBackdrop)
+}
+
+function hide(element) {
+    element.style.display = "none"
+}
+
+function createRadioSettingsWindow() {
+    var radioSettingsWindow = createDiv("radioSettingsModal", "modal fade")
+    radioSettingsWindow.tabindex = "-1"
+    radioSettingsWindow.role = "dialog"
+
+    var radioSettingsWindowDialog = createRadioSettingsWindowDialog()
+    radioSettingsWindow.append(radioSettingsWindowDialog)
+
+    document.body.append(radioSettingsWindow)
+}
+
+function createRadioSettingsWindowDialog() {
+    var radioSettingsWindowDialog = createDiv("radioSettingsWindowDialog", "modal-dialog")
+    radioSettingsWindowDialog.role = "document"
+    radioSettingsWindowDialog.style.cssText = radioSettingsWindowDialogStyle()
+
+    var radioSettingsWindowContent = createRadioSettingsWindowContent()
+    radioSettingsWindowDialog.append(radioSettingsWindowContent)
+    return radioSettingsWindowDialog
+}
+
+function createRadioSettingsWindowContent() {
+    var radioSettingsWindowContent = createDiv("radioSettingsWindowContent", "modal-content")
+    radioSettingsWindowContent.append(createRadioSettingsHeader())
+    radioSettingsWindowContent.append(createRadioSettingsBody())
+    return radioSettingsWindowContent
+}
+
+function createRadioSettingsHeader() {
+    var header = createDiv("radioSettingsHeader", "modal-header")
+
+    var headerCloseButton = createRadioSettingsCloseButton()
+    header.append(headerCloseButton)
+
+    var headerTitle = document.createElement("h2")
+    headerTitle.className = "modal-title"
+    headerTitle.innerHTML = "Radio Settings"
+    header.append(headerTitle)
+
+    return header
+}
+
+function createRadioSettingsCloseButton() {
+    var headerCloseButton = createDiv("settingsHeaderCloseButton", "close")
+    headerCloseButton.onclick = closeRadioSettings
+
+    var headerCloseButtonIcon = document.createElement("span") // FIXME: can this be div
+    headerCloseButtonIcon.innerHTML = "×"
+    headerCloseButton.append(headerCloseButtonIcon)
+    return headerCloseButton
+}
+
+function createRadioSettingsBody() {
+    var settingsBody = createDiv("radioSettingsBody", "modal-body")
+    settingsBody.append(createAutoplayOnLaunchSetting())
+    return settingsBody
+}
+
+function createAutoplayOnLaunchSetting() {
+    var autoplayOnLaunchSetting = createDiv()
+    autoplayOnLaunchSetting.style.cssText = radioSettingStyle()
+
+    var autoplayOnLaunchTitle = document.createElement("label")
+    autoplayOnLaunchTitle.innerHTML = "Autoplay after loading"
+    autoplayOnLaunchTitle.style.cssText = radioSettingTitleStyle()
+    autoplayOnLaunchSetting.append(autoplayOnLaunchTitle)
+
+    var checkbox = createCheckbox("autoplayOnLaunchCheckbox", shouldAutoplayOnLaunch(), changeAutoplayOnLaunchSetting)
+    autoplayOnLaunchSetting.append(checkbox)
+
+    return autoplayOnLaunchSetting
+}
+
+function createCheckbox(id, isChecked, onClick) {
+    var checkboxContainer = document.createElement("div")
+    checkboxContainer.className = "customCheckbox"
+
+    var checkbox = document.createElement("input")
+    checkbox.type = "checkbox"
+    checkbox.id = id
+    checkbox.checked = isChecked
+    checkbox.onclick = onClick
+    checkboxContainer.append(checkbox)
+
+    var iconLabel = document.createElement("label")
+    iconLabel.htmlFor = id
+
+    var checkedIcon = document.createElement("div")
+    checkedIcon.className = "fa fa-check"
+    iconLabel.append(checkedIcon)
+    checkboxContainer.append(iconLabel)
+    return checkboxContainer
+}
+
+function createRadioSettingBackdrop() {
+    var settingsBackdropFade = createDiv("radioSettingsBackdrop", "modal-backdrop fade")
+    return settingsBackdropFade
+}
+
 // Styles
 function openRadioButtonStyle() {
     return [
@@ -539,5 +560,24 @@ function settingsButtonStyle() {
         "position: absolute",
         "right: 3px",
         "bottom: #0px"
+    ].join(";")
+}
+
+function radioSettingsWindowDialogStyle() {
+    return [
+        "width: 300px"
+    ].join(";")
+}
+
+function radioSettingStyle() {
+    return [
+        "display: inline-flex"
+    ].join(";")
+}
+
+function radioSettingTitleStyle() {
+    return [
+        "padding-right: 30px",
+        "padding-left: 30px"
     ].join(";")
 }
