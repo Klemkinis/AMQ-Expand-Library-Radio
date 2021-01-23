@@ -4,21 +4,37 @@
 // @match        https://animemusicquiz.com/?forceLogin=True
 // ==/UserScript==
 
-(function() {
-    if (document.getElementById("startPage")) {
-        return
-    }
-
-    addAnimationStyle()
-    addExpandRadioButton()
-    addRadioOverlay()
-    addRadioSettings()
-    loadExpandLibrary()
-})()
-
 var allAnimeSongDetailsList
 var isFirstTimeLaunch = true
 var shouldAutoplayAfterLoading = shouldAutoplayOnLaunch()
+
+setupRadio()
+
+// Setup
+function setupRadio() {
+    if (document.getElementById("startPage")) {
+        setTimeout(setupRadio, 3000)
+        return
+    }
+
+    setupUI()
+    loadExpandLibrary()
+}
+
+function setupUI() {
+    document.body.append(createRadioOverlay())
+    document.body.append(createExpandLibraryButton())
+
+    var radioSettingsWindow = createRadioSettingsWindow()
+    hide(radioSettingsWindow)
+    document.body.append(radioSettingsWindow)
+
+    var radioSettingBackdrop = createRadioSettingBackdrop()
+    hide(radioSettingBackdrop)
+    document.body.append(radioSettingBackdrop)
+
+    document.head.append(radioInfoScrollAnimationStyle())
+}
 
 function loadExpandLibrary() {
     if (document.getElementById("loadingScreen").className !== "gamePage hidden") {
@@ -26,7 +42,7 @@ function loadExpandLibrary() {
         return
     }
 
-    let expandLibraryEntryListener = new Listener("expandLibrary questions", function (payload) {
+    var expandLibraryEntryListener = new Listener("expandLibrary questions", function(payload) {
         if (payload.success === false) {
             console.log("Failed expand library loading")
             return
@@ -44,7 +60,7 @@ function updateAllAnimeSongDetailsListUsing(animeList) {
     allAnimeSongDetailsList = []
 
     for (var anime of animeList) {
-        let songDetailsList = songDetailsListFrom(anime)
+        var songDetailsList = songDetailsListFrom(anime)
         allAnimeSongDetailsList = allAnimeSongDetailsList.concat(songDetailsList)
     }
 
@@ -60,11 +76,11 @@ function updateAllAnimeSongDetailsListUsing(animeList) {
 }
 
 function songDetailsListFrom(animeEntry) {
-    let expandLibrarySongList = animeEntry.songs
+    var expandLibrarySongList = animeEntry.songs
     var animeSongDetailsList = []
 
     for (var expandLibrarySong of expandLibrarySongList) {
-        let songDetails = songDetailsWithMp3From(expandLibrarySong)
+        var songDetails = songDetailsWithMp3From(expandLibrarySong)
 
         if (songDetails.mp3Link == null) {
             continue
@@ -87,90 +103,29 @@ function songDetailsWithMp3From(expandLibrarySong) {
     return songDetails
 }
 
-function addExpandRadioButton() {
-    var openRadioButton = createExpandLibraryButton()
-    document.body.append(openRadioButton)
-}
-
-function addAnimationStyle() {
-    var scrollingAnimationStyle = document.createElement("style")
-    scrollingAnimationStyle.innerHTML = `
-        @-moz-keyframes songTitleScroll {
-        0%   { -moz-transform: translateX(150px); }
-        100% { -moz-transform: translateX(-100%); }
-        }
-        @-webkit-keyframes songTitleScroll {
-        0%   { -webkit-transform: translateX(150px); }
-        100% { -webkit-transform: translateX(-100%); }
-        }
-        @keyframes songTitleScroll {
-        0%   {
-        -moz-transform: translateX(150px);
-        -webkit-transform: translateX(150px);
-        transform: translateX(150px);
-        }
-        100% {
-        -moz-transform: translateX(-100%);
-        -webkit-transform: translateX(-100%);
-        transform: translateX(-100%);
-        }
-        }`
-    document.head.append(scrollingAnimationStyle)
-}
-
-function addRadioOverlay() {
-    var radioOverlay = createRadioOverlay()
-    document.body.append(radioOverlay)
-}
-
-function expandRadioOverlay() {
-    var radioOverlay = document.getElementById("radioOverlay")
-    radioOverlay.style.visibility = "visible"
-
-    var openRadioButton = document.getElementById("openRadioButton")
-    openRadioButton.style.visibility = "hidden"
-}
-
-function collapseRadioOverlay() {
-    var radioOverlay = document.getElementById("radioOverlay")
-    radioOverlay.style.visibility = "hidden"
-
-    var openRadioButton = document.getElementById("openRadioButton")
-    openRadioButton.style.visibility = "visible"
-}
-
+// Radio player actions
 function playRandomSong() {
-    let songIndex = randomSongIndex(allAnimeSongDetailsList.length)
+    var songIndex = randomSongIndex(allAnimeSongDetailsList.length)
     play(allAnimeSongDetailsList[songIndex])
 }
 
 function queueRandomSong() {
-    let songIndex = randomSongIndex(allAnimeSongDetailsList.length)
+    var songIndex = randomSongIndex(allAnimeSongDetailsList.length)
     queue(allAnimeSongDetailsList[songIndex])
 }
 
-function showPauseButton() {
-    var radioPlayerPlayButtonIcon = document.getElementById("radioPlayButton").children[0]
-    radioPlayerPlayButtonIcon.className = "fa fa-pause"
-}
-
-function showPlayButton() {
-    var radioPlayerPlayButtonIcon = document.getElementById("radioPlayButton").children[0]
-    radioPlayerPlayButtonIcon.className = "fa fa-play"
+function randomSongIndex(songCount) {
+    return Math.floor(Math.random() * (songCount))
 }
 
 function pauseOrPlay() {
-    let radioPlayer = document.getElementById("radioPlayer")
+    var radioPlayer = document.getElementById("radioPlayer")
 
     if (radioPlayer.paused) {
         radioPlayer.play()
     } else {
         radioPlayer.pause()
     }
-}
-
-function randomSongIndex(songCount) {
-    return Math.floor(Math.random() * (songCount))
 }
 
 function play(song) {
@@ -190,26 +145,7 @@ function queue(song) {
     popoverElement.setAttribute("data-content", song.anime)
 }
 
-function openRadioSettings() {
-    var radioSettingsWindow = document.getElementById("radioSettingsModal")
-    radioSettingsWindow.style.display = "block"
-    setTimeout(function() { radioSettingsWindow.className = "modal fade in" }, 10)
-
-    var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
-    radioSettingsBackdrop.style.display = "block"
-    setTimeout(function() { radioSettingsBackdrop.className = "modal-backdrop fade in" }, 10)
-}
-
-function closeRadioSettings() {
-    var radioSettingsWindow = document.getElementById("radioSettingsModal")
-    radioSettingsWindow.className = "modal fade out"
-    setTimeout(function() { radioSettingsWindow.style.display = "none" }, 500)
-
-    var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
-    radioSettingsBackdrop.className = "modal-backdrop fade out"
-    setTimeout(function() { radioSettingsBackdrop.style.display = "none" }, 500)
-}
-
+// Settings
 function shouldAutoplayOnLaunch() {
     var cookieKey = "shouldAutoplayOnLaunch"
     var cookieList = document.cookie.split(";")
@@ -227,6 +163,61 @@ function shouldAutoplayOnLaunch() {
 
 function changeAutoplayOnLaunchSetting() {
     document.cookie = "shouldAutoplayOnLaunch=" + (!shouldAutoplayOnLaunch()).toString()
+}
+
+// UI Update
+function hide(element) {
+    element.style.display = "none"
+}
+
+function show(element) {
+    element.style.display = "block"
+}
+
+function showPauseButton() {
+    var radioPlayerPlayButtonIcon = document.getElementById("radioPlayButton").children[0]
+    radioPlayerPlayButtonIcon.className = "fa fa-pause"
+}
+
+function showPlayButton() {
+    var radioPlayerPlayButtonIcon = document.getElementById("radioPlayButton").children[0]
+    radioPlayerPlayButtonIcon.className = "fa fa-play"
+}
+
+function expandRadioOverlay() {
+    var radioOverlay = document.getElementById("radioOverlay")
+    show(radioOverlay)
+
+    var openRadioButton = document.getElementById("openRadioButton")
+    hide(openRadioButton)
+}
+
+function collapseRadioOverlay() {
+    var radioOverlay = document.getElementById("radioOverlay")
+    hide(radioOverlay)
+
+    var openRadioButton = document.getElementById("openRadioButton")
+    show(openRadioButton)
+}
+
+function openRadioSettings() {
+    var radioSettingsWindow = document.getElementById("radioSettingsModal")
+    show(radioSettingsWindow)
+    setTimeout(function() { radioSettingsWindow.className = "modal fade in" }, 10)
+
+    var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
+    show(radioSettingsBackdrop)
+    setTimeout(function() { radioSettingsBackdrop.className = "modal-backdrop fade in" }, 10)
+}
+
+function closeRadioSettings() {
+    var radioSettingsWindow = document.getElementById("radioSettingsModal")
+    radioSettingsWindow.className = "modal fade out"
+    setTimeout(function() { radioSettingsWindow.style.display = "none" }, 500)
+
+    var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
+    radioSettingsBackdrop.className = "modal-backdrop fade out"
+    setTimeout(function() { radioSettingsBackdrop.style.display = "none" }, 500)
 }
 
 // UI Elements
@@ -252,6 +243,7 @@ function createExpandLibraryButton() {
 function createRadioOverlay() {
     var radioOverlay = createDiv("radioOverlay")
     radioOverlay.style.cssText = radioOverlayStyle()
+    hide(radioOverlay)
 
     radioOverlay.append(createPlayerTitle())
     radioOverlay.append(createSongInformationContainer())
@@ -351,21 +343,6 @@ function createRadioPlayer() {
     return radioPlayer
 }
 
-function addRadioSettings() {
-    var radioSettingsWindow = createRadioSettingsWindow()
-    var radioSettingBackdrop = createRadioSettingBackdrop()
-
-    hide(radioSettingsWindow)
-    hide(radioSettingBackdrop)
-
-    document.body.append(radioSettingsWindow)
-    document.body.append(radioSettingBackdrop)
-}
-
-function hide(element) {
-    element.style.display = "none"
-}
-
 function createRadioSettingsWindow() {
     var radioSettingsWindow = createDiv("radioSettingsModal", "modal fade")
     radioSettingsWindow.tabindex = "-1"
@@ -374,7 +351,7 @@ function createRadioSettingsWindow() {
     var radioSettingsWindowDialog = createRadioSettingsWindowDialog()
     radioSettingsWindow.append(radioSettingsWindowDialog)
 
-    document.body.append(radioSettingsWindow)
+    return radioSettingsWindow
 }
 
 function createRadioSettingsWindowDialog() {
@@ -492,8 +469,7 @@ function radioOverlayStyle() {
         "background: rgb(66, 66, 66)",
         "box-shadow: 0 0 10px 2px rgb(0, 0, 0)",
         "position: absolute",
-        "top: 5%",
-        "visibility: hidden"
+        "top: 5%"
     ].join(";")
 }
 
@@ -559,7 +535,7 @@ function settingsButtonStyle() {
     return [
         "position: absolute",
         "right: 3px",
-        "bottom: #0px"
+        "bottom: 0px"
     ].join(";")
 }
 
@@ -580,4 +556,30 @@ function radioSettingTitleStyle() {
         "padding-right: 30px",
         "padding-left: 30px"
     ].join(";")
+}
+
+function radioInfoScrollAnimationStyle() {
+    var scrollingAnimationStyle = document.createElement("style")
+    scrollingAnimationStyle.innerHTML = `
+        @-moz-keyframes songTitleScroll {
+        0%   { -moz-transform: translateX(150px); }
+        100% { -moz-transform: translateX(-100%); }
+        }
+        @-webkit-keyframes songTitleScroll {
+        0%   { -webkit-transform: translateX(150px); }
+        100% { -webkit-transform: translateX(-100%); }
+        }
+        @keyframes songTitleScroll {
+        0%   {
+        -moz-transform: translateX(150px);
+        -webkit-transform: translateX(150px);
+        transform: translateX(150px);
+        }
+        100% {
+        -moz-transform: translateX(-100%);
+        -webkit-transform: translateX(-100%);
+        transform: translateX(-100%);
+        }
+        }`
+    return scrollingAnimationStyle
 }
