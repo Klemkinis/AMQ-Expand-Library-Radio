@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
+// @version      1.0
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // ==/UserScript==
