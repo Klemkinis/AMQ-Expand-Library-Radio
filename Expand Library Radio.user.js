@@ -148,22 +148,14 @@ function queue(song) {
 
 // Settings
 function shouldAutoplayOnLaunch() {
-    var cookieKey = "shouldAutoplayOnLaunch"
-    var cookieList = document.cookie.split(";")
-    var shouldAutoplayOnLaunchCookie = cookieList.find(function(cookie) {
-        return cookie.includes(cookieKey)
-    })
-
-    if (shouldAutoplayOnLaunchCookie == null) {
-        return false
-    }
-
-    var cookieValue = shouldAutoplayOnLaunchCookie.substring(cookieKey.length + 2)
-    return cookieValue === "true"
+    var shouldAutoplayOnLaunchCookie = Cookies.get("shouldAutoplayOnLaunch")
+    return shouldAutoplayOnLaunchCookie === "true"
 }
 
 function changeAutoplayOnLaunchSetting() {
-    document.cookie = "shouldAutoplayOnLaunch=" + (!shouldAutoplayOnLaunch()).toString()
+    var previousValue = shouldAutoplayOnLaunch()
+    var newValue = (!previousValue).toString()
+    Cookies.set("shouldAutoplayOnLaunch", newValue)
 }
 
 // UI Update
