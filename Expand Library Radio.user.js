@@ -155,7 +155,7 @@ function shouldAutoplayOnLaunch() {
 function changeAutoplayOnLaunchSetting() {
     var previousValue = shouldAutoplayOnLaunch()
     var newValue = (!previousValue).toString()
-    Cookies.set("shouldAutoplayOnLaunch", newValue)
+    Cookies.set("shouldAutoplayOnLaunch", newValue, { expires: 365 })
 }
 
 // UI Update
