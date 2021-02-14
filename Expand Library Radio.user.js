@@ -71,6 +71,7 @@ function updateAllAnimeSongDetailsListUsing(animeList) {
     }
 
     if (shouldAutoplayAfterLoading) {
+        expandRadioOverlay()
         pauseOrPlay()
         shouldAutoplayAfterLoading = false
     }
