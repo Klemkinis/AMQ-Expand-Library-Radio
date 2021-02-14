@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      1.0
+// @version      1.1
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // ==/UserScript==
@@ -71,6 +71,7 @@ function updateAllAnimeSongDetailsListUsing(animeList) {
     }
 
     if (shouldAutoplayAfterLoading) {
+        expandRadioOverlay()
         pauseOrPlay()
         shouldAutoplayAfterLoading = false
     }
@@ -148,22 +149,14 @@ function queue(song) {
 
 // Settings
 function shouldAutoplayOnLaunch() {
-    var cookieKey = "shouldAutoplayOnLaunch"
-    var cookieList = document.cookie.split(";")
-    var shouldAutoplayOnLaunchCookie = cookieList.find(function(cookie) {
-        return cookie.includes(cookieKey)
-    })
-
-    if (shouldAutoplayOnLaunchCookie == null) {
-        return false
-    }
-
-    var cookieValue = shouldAutoplayOnLaunchCookie.substring(cookieKey.length + 2)
-    return cookieValue === "true"
+    var shouldAutoplayOnLaunchCookie = Cookies.get("shouldAutoplayOnLaunch")
+    return shouldAutoplayOnLaunchCookie === "true"
 }
 
 function changeAutoplayOnLaunchSetting() {
-    document.cookie = "shouldAutoplayOnLaunch=" + (!shouldAutoplayOnLaunch()).toString()
+    var previousValue = shouldAutoplayOnLaunch()
+    var newValue = (!previousValue).toString()
+    Cookies.set("shouldAutoplayOnLaunch", newValue, { expires: 365 })
 }
 
 // UI Update
