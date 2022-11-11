@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      1.1
+// @version      1.1.1
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // ==/UserScript==
@@ -147,6 +147,13 @@ function queue(song) {
     popoverElement.setAttribute("data-content", song.anime)
 }
 
+function adjustVolume(event) {
+    let radioPlayer = document.getElementById('radioPlayer')
+    let volume = radioPlayer.volume
+    let increment = event.deltaY < 0 ? 0.1 : -0.1
+    radioPlayer.volume = Math.min(Math.max(volume + increment, 0), 1)
+}
+
 // Settings
 function shouldAutoplayOnLaunch() {
     var shouldAutoplayOnLaunchCookie = Cookies.get("shouldAutoplayOnLaunch")
@@ -226,6 +233,7 @@ function createExpandLibraryButton() {
     var openRadioButton = createDiv("openRadioButton", "button")
     openRadioButton.style.cssText = openRadioButtonStyle()
     openRadioButton.onclick = expandRadioOverlay
+    openRadioButton.onwheel = adjustVolume
 
     var openRadioButtonIcon = createDiv()
     openRadioButtonIcon.innerHTML = "▶"
@@ -237,6 +245,7 @@ function createExpandLibraryButton() {
 function createRadioOverlay() {
     var radioOverlay = createDiv("radioOverlay")
     radioOverlay.style.cssText = radioOverlayStyle()
+    radioOverlay.onwheel = adjustVolume
     hide(radioOverlay)
 
     radioOverlay.append(createPlayerTitle())
