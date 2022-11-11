@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      1.1.1
+// @version      1.1.2
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // ==/UserScript==
 
+var animeList
 var allAnimeSongDetailsList
 var isFirstTimeLaunch = true
 var shouldAutoplayAfterLoading = shouldAutoplayOnLaunch()
@@ -48,7 +49,8 @@ function loadExpandLibrary() {
             console.log("Failed expand library loading")
             return
         }
-        updateAllAnimeSongDetailsListUsing(payload.questions)
+        animeList = payload.questions
+        updateAllAnimeSongDetailsList()
     }).bindListener()
 
     socket.sendCommand({
@@ -57,7 +59,7 @@ function loadExpandLibrary() {
     })
 }
 
-function updateAllAnimeSongDetailsListUsing(animeList) {
+function updateAllAnimeSongDetailsList() {
     allAnimeSongDetailsList = []
 
     for (var anime of animeList) {
@@ -66,8 +68,7 @@ function updateAllAnimeSongDetailsListUsing(animeList) {
     }
 
     if (isFirstTimeLaunch) {
-        queueRandomSong()
-        isFirstTimeLaunch = false
+        isFirstTimeLaunch = !queueRandomSong()
     }
 
     if (shouldAutoplayAfterLoading) {
@@ -85,6 +86,15 @@ function songDetailsListFrom(animeEntry) {
         var songDetails = songDetailsWithMp3From(expandLibrarySong)
 
         if (songDetails.mp3Link == null) {
+            continue
+        }
+        if (expandLibrarySong.type == 1 && shouldFilterOutOpenings()) {
+            continue
+        }
+        if (expandLibrarySong.type == 2 && shouldFilterOutEndings()) {
+            continue
+        }
+        if (expandLibrarySong.type == 3 && shouldFilterOutInserts()) {
             continue
         }
 
@@ -112,8 +122,12 @@ function playRandomSong() {
 }
 
 function queueRandomSong() {
+    if (allAnimeSongDetailsList.length == 0) {
+        return false
+    }
     var songIndex = randomSongIndex(allAnimeSongDetailsList.length)
     queue(allAnimeSongDetailsList[songIndex])
+    return true
 }
 
 function randomSongIndex(songCount) {
@@ -156,14 +170,48 @@ function adjustVolume(event) {
 
 // Settings
 function shouldAutoplayOnLaunch() {
-    var shouldAutoplayOnLaunchCookie = Cookies.get("shouldAutoplayOnLaunch")
-    return shouldAutoplayOnLaunchCookie === "true"
+    return isCookieEnabled("shouldAutoplayOnLaunch")
 }
 
 function changeAutoplayOnLaunchSetting() {
-    var previousValue = shouldAutoplayOnLaunch()
+    toggleCookie("shouldAutoplayOnLaunch")
+}
+
+function shouldFilterOutOpenings() {
+    return isCookieEnabled("shouldFilterOutOpenings")
+}
+
+function changeOpeningsFilterSetting() {
+    toggleCookie("shouldFilterOutOpenings")
+    updateAllAnimeSongDetailsList()
+}
+
+function shouldFilterOutEndings() {
+    return isCookieEnabled("shouldFilterOutEndings")
+}
+
+function changeEndingsFilterSetting() {
+    toggleCookie("shouldFilterOutEndings")
+    updateAllAnimeSongDetailsList()
+}
+
+function shouldFilterOutInserts() {
+    return isCookieEnabled("shouldFilterOutInserts")
+}
+
+function changeInsertsFilterSetting() {
+    toggleCookie("shouldFilterOutInserts")
+    updateAllAnimeSongDetailsList()
+}
+
+function isCookieEnabled(cookie) {
+    return Cookies.get(cookie) === "true"
+}
+
+function toggleCookie(cookie) {
+    var previousValue = isCookieEnabled(cookie)
     var newValue = (!previousValue).toString()
-    Cookies.set("shouldAutoplayOnLaunch", newValue, { expires: 365 })
+    Cookies.set(cookie, newValue, { expires: 365 })
 }
 
 // UI Update
@@ -400,28 +448,42 @@ function createRadioSettingsCloseButton() {
 
 function createRadioSettingsBody() {
     var settingsBody = createDiv("radioSettingsBody", "modal-body")
-    settingsBody.append(createAutoplayOnLaunchSetting())
+    var settingsTable = document.createElement("table")
+    settingsTable.style.cssText = radioSettingsTableStyle()
+
+    createAutoplayOnLaunchSetting(settingsTable.insertRow(-1))
+    createSongTypeFilterSettings(settingsTable.insertRow(-1))
+
+    settingsBody.append(settingsTable)
     return settingsBody
 }
 
-function createAutoplayOnLaunchSetting() {
-    var autoplayOnLaunchSetting = createDiv()
-    autoplayOnLaunchSetting.style.cssText = radioSettingStyle()
+function createAutoplayOnLaunchSetting(row) {
+    row.insertCell(0).append(createSettingLabel("Autoplay after loading"))
+    row.cells[0].colSpan = "5"
+    row.insertCell(1).append(createCheckbox("autoplayOnLaunchCheckbox", shouldAutoplayOnLaunch(), changeAutoplayOnLaunchSetting))
+}
 
-    var autoplayOnLaunchTitle = document.createElement("label")
-    autoplayOnLaunchTitle.innerHTML = "Autoplay after loading"
-    autoplayOnLaunchTitle.style.cssText = radioSettingTitleStyle()
-    autoplayOnLaunchSetting.append(autoplayOnLaunchTitle)
+function createSongTypeFilterSettings(row) {
+    row.insertCell(0).append(createSettingLabel("OP"))
+    row.insertCell(1).append(createCheckbox("openingsCheckbox", !shouldFilterOutOpenings(), changeOpeningsFilterSetting))
+    row.insertCell(2).append(createSettingLabel("ED"))
+    row.insertCell(3).append(createCheckbox("endingsCheckbox", !shouldFilterOutEndings(), changeEndingsFilterSetting))
+    row.insertCell(4).append(createSettingLabel("IN"))
+    row.insertCell(5).append(createCheckbox("insertsCheckbox", !shouldFilterOutInserts(), changeInsertsFilterSetting))
+}
 
-    var checkbox = createCheckbox("autoplayOnLaunchCheckbox", shouldAutoplayOnLaunch(), changeAutoplayOnLaunchSetting)
-    autoplayOnLaunchSetting.append(checkbox)
-
-    return autoplayOnLaunchSetting
+function createSettingLabel(title) {
+    var label = document.createElement("label")
+    label.innerHTML = title
+    label.style.cssText = radioSettingTitleStyle()
+    return label
 }
 
 function createCheckbox(id, isChecked, onClick) {
     var checkboxContainer = document.createElement("div")
     checkboxContainer.className = "customCheckbox"
+    checkboxContainer.style.cssText = radioSettingCheckboxStyle()
 
     var checkbox = document.createElement("input")
     checkbox.type = "checkbox"
@@ -548,16 +610,21 @@ function radioSettingsWindowDialogStyle() {
     ].join(";")
 }
 
-function radioSettingStyle() {
+function radioSettingsTableStyle() {
     return [
-        "display: inline-flex"
+        "width: 100%"
+    ].join(";")
+}
+
+function radioSettingCheckboxStyle() {
+    return [
+        "vertical-align: middle"
     ].join(";")
 }
 
 function radioSettingTitleStyle() {
     return [
-        "padding-right: 30px",
-        "padding-left: 30px"
+        "padding-left: 10px"
     ].join(";")
 }
 
