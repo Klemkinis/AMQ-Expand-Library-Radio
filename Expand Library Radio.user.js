@@ -1,11 +1,15 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      1.1.2
+// @version      1.1.3
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
+// @resource     malIds https://raw.githubusercontent.com/Kikimanox/DiscordBotNew/master/data/_amq/annMal.json
+// @grant        GM_getResourceText
 // ==/UserScript==
 
-var animeList
+var amqList
+var anilist
+var malIds = JSON.parse(GM_getResourceText("malIds")) // This depends on Kiki actively updating json
 var allAnimeSongDetailsList
 var isFirstTimeLaunch = true
 var shouldAutoplayAfterLoading = shouldAutoplayOnLaunch()
@@ -20,6 +24,7 @@ function setupRadio() {
     }
 
     setupUI()
+    // loadUserPageFromAnilist()
     loadExpandLibrary()
 }
 
@@ -49,7 +54,7 @@ function loadExpandLibrary() {
             console.log("Failed expand library loading")
             return
         }
-        animeList = payload.questions
+        amqList = payload.questions
         updateAllAnimeSongDetailsList()
     }).bindListener()
 
@@ -62,7 +67,29 @@ function loadExpandLibrary() {
 function updateAllAnimeSongDetailsList() {
     allAnimeSongDetailsList = []
 
-    for (var anime of animeList) {
+    if (allListStatusesAllowed() == false && anilist == undefined) {
+        return
+    }
+
+    for (var anime of amqList) {
+        var malId = parseInt((malIds[anime.annId] ?? "-1").split(" ")[0])
+
+        if (shouldFilterOutCompleted() && (anilist["COMPLETED"] ?? []).includes(malId)) {
+            continue
+        }
+        if (shouldFilterOutWatching() && ((anilist["CURRENT"] ?? []).includes(malId) || (anilist["REPEATING"] ?? []).includes(malId))) {
+            continue
+        }
+        if (shouldFilterOutDropped() && (anilist["DROPPED"] ?? []).includes(malId)) {
+            continue
+        }
+        if (shouldFilterOutPaused() && (anilist["PAUSED"] ?? []).includes(malId)) {
+            continue
+        }
+        if (shouldFilterOutPlanToWatch() && (anilist["PLANNING"] ?? []).includes(malId)) {
+            continue
+        }
+
         var songDetailsList = songDetailsListFrom(anime)
         allAnimeSongDetailsList = allAnimeSongDetailsList.concat(songDetailsList)
     }
@@ -204,6 +231,55 @@ function changeInsertsFilterSetting() {
     updateAllAnimeSongDetailsList()
 }
 
+function allListStatusesAllowed() {
+    return !shouldFilterOutCompleted() && !shouldFilterOutWatching() && !shouldFilterOutDropped() && !shouldFilterOutPlanToWatch() && !shouldFilterOutPaused()
+}
+
+function shouldFilterOutCompleted() {
+    return isCookieEnabled("shouldFilterOutCompleted")
+}
+
+function changeCompletedFilterSetting() {
+    toggleCookie("shouldFilterOutCompleted")
+    updateAllAnimeSongDetailsList()
+}
+
+function shouldFilterOutWatching() {
+    return isCookieEnabled("shouldFilterOutWatching")
+}
+
+function changeWatchingFilterSetting() {
+    toggleCookie("shouldFilterOutWatching")
+    updateAllAnimeSongDetailsList()
+}
+
+function shouldFilterOutDropped() {
+    return isCookieEnabled("shouldFilterOutDropped")
+}
+
+function changeDroppedFilterSetting() {
+    toggleCookie("shouldFilterOutDropped")
+    updateAllAnimeSongDetailsList()
+}
+
+function shouldFilterOutPlanToWatch() {
+    return isCookieEnabled("shouldFilterOutPlanToWatch")
+}
+
+function changePlanToWatchFilterSetting() {
+    toggleCookie("shouldFilterOutPlanToWatch")
+    updateAllAnimeSongDetailsList()
+}
+
+function shouldFilterOutPaused() {
+    return isCookieEnabled("shouldFilterOutPaused")
+}
+
+function changePausedFilterSetting() {
+    toggleCookie("shouldFilterOutPaused")
+    updateAllAnimeSongDetailsList()
+}
+
 function isCookieEnabled(cookie) {
     return Cookies.get(cookie) === "true"
 }
@@ -267,6 +343,102 @@ function closeRadioSettings() {
     var radioSettingsBackdrop = document.getElementById("radioSettingsBackdrop")
     radioSettingsBackdrop.className = "modal-backdrop fade out"
     setTimeout(function() { radioSettingsBackdrop.style.display = "none" }, 500)
+}
+
+// Anilist
+async function loadUserPageFromAnilist() {
+    if (document.getElementById("loadingScreen").className !== "gamePage hidden") {
+        setTimeout(loadUserPageFromAnilist, 3000)
+        return
+    }
+    var username = document.getElementById("aniListUserNameInput").value
+    if (username == '') {
+        return
+    }
+
+    var url = "https://graphql.anilist.co"
+    var httpMethod = "POST"
+    var requestBody = userPageRequestBody(username)
+    try {
+        var response = await responseFrom(url, httpMethod, requestBody)
+        updateListsFrom(response)
+        updateAllAnimeSongDetailsList()
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+function responseFrom(url, method, body) {
+    return new Promise(function (resolve, reject) {
+        var request = new XMLHttpRequest()
+        request.open(method, url, true)
+        request.setRequestHeader("Content-Type", "application/json")
+        request.setRequestHeader("Accept", "application/json")
+        request.timeout = 15 * 1000
+        request.onload = function() {
+            if (this.status != 200) {
+                reject("Request completed with error status: " + this.status + " " + this.statusText)
+                return
+            }
+            resolve(this.response)
+        }
+        request.ontimeout = function() {
+            reject("Request timedout!")
+        }
+        request.onerror = function() {
+            reject("Unexpected network error!")
+        }
+        request.send(body)
+    })
+}
+
+function userPageRequestBody(username, page) {
+    var query = userPageQuery()
+    var variables = { username: username, page: page }
+    return JSON.stringify({
+        query: query,
+        variables: variables
+    })
+}
+
+function updateListsFrom(response) {
+    anilist = {}
+    var lists = JSON.parse(response).data.MediaListCollection.lists
+    if (lists == null) {
+        throw("Invalid or corrupted response from anilist")
+    }
+    for (var list of lists) {
+        anilist[list.status] = formattedMalIds(list.entries)
+    }
+}
+
+function formattedMalIds(anilistEntries) {
+    var malIds = []
+    for (var entry of anilistEntries) {
+        let entryId = entry.media.idMal
+        if (entryId == null) {
+            continue
+        }
+        malIds = malIds.concat(entryId)
+    }
+    return malIds
+}
+
+function userPageQuery() {
+    return `
+query ($username: String) {
+  MediaListCollection(userName: $username, type: ANIME) {
+    lists {
+      entries {
+        media {
+          idMal
+        }
+      }
+      status
+    }
+  }
+}
+`
 }
 
 // UI Elements
@@ -453,6 +625,8 @@ function createRadioSettingsBody() {
 
     createAutoplayOnLaunchSetting(settingsTable.insertRow(-1))
     createSongTypeFilterSettings(settingsTable.insertRow(-1))
+    //createListStatusFilterSettings(settingsTable.insertRow(-1))
+    //createListStatusFilterSettings2(settingsTable.insertRow(-1))
 
     settingsBody.append(settingsTable)
     return settingsBody
@@ -471,6 +645,24 @@ function createSongTypeFilterSettings(row) {
     row.insertCell(3).append(createCheckbox("endingsCheckbox", !shouldFilterOutEndings(), changeEndingsFilterSetting))
     row.insertCell(4).append(createSettingLabel("IN"))
     row.insertCell(5).append(createCheckbox("insertsCheckbox", !shouldFilterOutInserts(), changeInsertsFilterSetting))
+}
+
+function createListStatusFilterSettings(row) {
+    row.insertCell(0).append(createSettingLabel("C"))
+    row.insertCell(1).append(createCheckbox("completedCheckbox", !shouldFilterOutCompleted(), changeCompletedFilterSetting))
+    row.insertCell(2).append(createSettingLabel("W"))
+    row.insertCell(3).append(createCheckbox("watchingCheckbox", !shouldFilterOutWatching(), changeWatchingFilterSetting))
+    row.insertCell(4).append(createSettingLabel("D"))
+    row.insertCell(5).append(createCheckbox("droppedCheckbox", !shouldFilterOutDropped(), changeDroppedFilterSetting))
+}
+
+function createListStatusFilterSettings2(row) {
+    row.insertCell(0)
+    row.insertCell(1).append(createSettingLabel("H"))
+    row.insertCell(2).append(createCheckbox("pausedCheckbox", !shouldFilterOutPaused(), changePausedFilterSetting))
+    row.insertCell(3).append(createSettingLabel("P"))
+    row.insertCell(4).append(createCheckbox("plantowatchCheckbox", !shouldFilterOutPlanToWatch(), changePlanToWatchFilterSetting))
+    row.insertCell(5)
 }
 
 function createSettingLabel(title) {
