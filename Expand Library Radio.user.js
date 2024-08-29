@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      1.1.3
+// @version      2.0.0
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // @resource     malIds https://raw.githubusercontent.com/Kikimanox/DiscordBotNew/master/data/_amq/annMal.json
@@ -13,6 +13,8 @@ var malIds = JSON.parse(GM_getResourceText("malIds")) // This depends on Kiki ac
 var allAnimeSongDetailsList
 var isFirstTimeLaunch = true
 var shouldAutoplayAfterLoading = shouldAutoplayOnLaunch()
+var pendingPlayback = false
+var detailsTask
 
 setupRadio()
 
@@ -49,18 +51,9 @@ function loadExpandLibrary() {
         return
     }
 
-    var expandLibraryEntryListener = new Listener("expandLibrary questions", function(payload) {
-        if (payload.success === false) {
-            console.log("Failed expand library loading")
-            return
-        }
-        amqList = payload.questions
+    expandLibrary.library.setup(() => {
+        amqList = expandLibrary.library.filterApplier.baseEntryList.map(anime => anime.animeEntry)
         updateAllAnimeSongDetailsList()
-    }).bindListener()
-
-    socket.sendCommand({
-        type: "library",
-        command: "expandLibrary questions"
     })
 }
 
@@ -106,13 +99,16 @@ function updateAllAnimeSongDetailsList() {
 }
 
 function songDetailsListFrom(animeEntry) {
-    var expandLibrarySongList = animeEntry.songs
+    var expandLibrarySongList = [animeEntry.songs.OP, animeEntry.songs.ED, animeEntry.songs.INS].flatMap(songs => songs)
     var animeSongDetailsList = []
 
     for (var expandLibrarySong of expandLibrarySongList) {
         var songDetails = songDetailsWithMp3From(expandLibrarySong)
 
-        if (songDetails.mp3Link == null) {
+        if (songDetails == null) {
+            continue
+        }
+        if (expandLibrarySong.uploaded != 1) {
             continue
         }
         if (expandLibrarySong.type == 1 && shouldFilterOutOpenings()) {
@@ -125,7 +121,7 @@ function songDetailsListFrom(animeEntry) {
             continue
         }
 
-        songDetails.anime = animeEntry.name
+        songDetails.anime = animeEntry.names.sort((l, r) => l.language < r.language ? 1 : -1).map(name => name.name)[0]
         animeSongDetailsList.push(songDetails)
     }
 
@@ -133,16 +129,26 @@ function songDetailsListFrom(animeEntry) {
 }
 
 function songDetailsWithMp3From(expandLibrarySong) {
+    if(expandLibrarySong.songEntry.artist == null) {
+        return null
+    }
     var songDetails = {
-        title: expandLibrarySong.name,
-        artist: expandLibrarySong.artist,
-        mp3Link: expandLibrarySong.examples.mp3
+        annSongId: expandLibrarySong.annSongId,
+        title: expandLibrarySong.songEntry.name,
+        artist: expandLibrarySong.songEntry.artist.name,
+        mp3Link: null
     }
 
     return songDetails
 }
 
 // Radio player actions
+function playIfPending() {
+    if (pendingPlayback == false) { return }
+    pendingPlayback = false
+    document.getElementById("radioPlayer").play()
+}
+
 function playRandomSong() {
     var songIndex = randomSongIndex(allAnimeSongDetailsList.length)
     play(allAnimeSongDetailsList[songIndex])
@@ -163,6 +169,10 @@ function randomSongIndex(songCount) {
 
 function pauseOrPlay() {
     var radioPlayer = document.getElementById("radioPlayer")
+    if(radioPlayer.src == null) {
+        pendingPlayback = true
+        return
+    }
 
     if (radioPlayer.paused) {
         radioPlayer.play()
@@ -173,19 +183,52 @@ function pauseOrPlay() {
 
 function play(song) {
     var radioPlayer = document.getElementById("radioPlayer")
+    pendingPlayback = true
     queue(song)
-    radioPlayer.play()
 }
 
 function queue(song) {
     var radioPlayer = document.getElementById("radioPlayer")
-    radioPlayer.src = song.mp3Link
+    if(song.mp3Link == null) {
+        radioPlayer.pause()
+        fetchSong(song)
+        return
+    }
 
+    radioPlayer.src = song.mp3Link
     var songInformationLabel = document.getElementById("radioSongInformationLabel")
     songInformationLabel.innerHTML = song.title + " by " + song.artist
 
     var popoverElement = document.getElementById("radioSongInformationWrapper")
     popoverElement.setAttribute("data-content", song.anime)
+}
+
+function fetchSong(song) {
+    // should likely cancel any pending, before making new one
+    detailsTask = new Listener("get song extended info", function(payload) {
+        if (payload == null) {
+            console.log("Failed fetching song", song)
+            return
+        }
+        if (payload.success === false) {
+            console.log("Failed fetching song", song)
+            return
+        }
+        if (payload.fileName == null) {
+            console.log("Missing song url", payload)
+            return
+        }
+        song.mp3Link = "https://nl.catbox.video/" + payload.fileName
+        queue(song)
+    }).bindListener()
+    socket.sendCommand({
+        type: "library",
+        command: "get song extended info",
+        data: {
+            annSongId: song.annSongId,
+            includeFileNames: true
+        }
+    })
 }
 
 function adjustVolume(event) {
@@ -562,6 +605,7 @@ function createRadioPlayer() {
     radioPlayer.onended = playRandomSong
     radioPlayer.onplaying = showPauseButton
     radioPlayer.onpause = showPlayButton
+    radioPlayer.onloadeddata = playIfPending
 
     return radioPlayer
 }
