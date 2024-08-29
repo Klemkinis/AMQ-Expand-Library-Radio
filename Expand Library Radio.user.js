@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      2.0.1
+// @version      2.0.2
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // @resource     malIds https://raw.githubusercontent.com/Kikimanox/DiscordBotNew/master/data/_amq/annMal.json
@@ -47,7 +47,8 @@ function setupUI() {
 }
 
 function loadExpandLibrary() {
-    if (document.getElementById("loadingScreen").className !== "gamePage hidden") {
+    let loadingScreen = document.getElementById("loadingScreen")
+    if (loadingScreen == null || loadingScreen.className !== "gamePage hidden") {
         setTimeout(loadExpandLibrary, 3000)
         return
     }
@@ -209,15 +210,18 @@ function fetchSong(song) {
     detailsTask = new Listener("get song extended info", function(payload) {
         this.unbindListener()
         if (payload == null) {
-            console.log("Failed fetching song", song)
+            console.log("Failed fetching song", song, payload)
+            queueRandomSong()
             return
         }
         if (payload.success === false) {
-            console.log("Failed fetching song", song)
+            console.log("Failed fetching song", song, payload)
+            queueRandomSong()
             return
         }
         if (payload.fileName == null) {
             console.log("Missing song url", payload)
+            queueRandomSong()
             return
         }
         song.mp3Link = catboxHost + payload.fileName
@@ -228,7 +232,7 @@ function fetchSong(song) {
         command: "get song extended info",
         data: {
             annSongId: song.annSongId,
-            includeFileNames: true
+            includeFileNames: false
         }
     })
 }
