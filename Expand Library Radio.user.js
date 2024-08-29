@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      2.0.2
+// @version      2.0.3
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // @resource     malIds https://raw.githubusercontent.com/Kikimanox/DiscordBotNew/master/data/_amq/annMal.json
@@ -14,8 +14,6 @@ var allAnimeSongDetailsList
 var isFirstTimeLaunch = true
 var shouldAutoplayAfterLoading = shouldAutoplayOnLaunch()
 var pendingPlayback = false
-var detailsTask
-var catboxHost = "https://nl.catbox.video/"
 
 setupRadio()
 
@@ -206,8 +204,7 @@ function queue(song) {
 }
 
 function fetchSong(song) {
-    // should likely cancel any pending, before making new one
-    detailsTask = new Listener("get song extended info", function(payload) {
+    new Listener("get song extended info", function(payload) {
         this.unbindListener()
         if (payload == null) {
             console.log("Failed fetching song", song, payload)
@@ -224,6 +221,7 @@ function fetchSong(song) {
             queueRandomSong()
             return
         }
+        let catboxHost = videoResolver.CATBOX_ENDPOINTS[videoResolver.targetHost]
         song.mp3Link = catboxHost + payload.fileName
         queue(song)
     }).bindListener()
