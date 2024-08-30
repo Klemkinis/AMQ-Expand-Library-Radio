@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Expand Library Radio
-// @version      2.0.3
+// @version      2.0.4
 // @match        https://animemusicquiz.com/
 // @match        https://animemusicquiz.com/?forceLogin=True
 // @resource     malIds https://raw.githubusercontent.com/Kikimanox/DiscordBotNew/master/data/_amq/annMal.json
@@ -52,12 +52,15 @@ function loadExpandLibrary() {
     }
 
     expandLibrary.library.setup(() => {
-        amqList = expandLibrary.library.filterApplier.baseEntryList.map(anime => anime.animeEntry)
         updateAllAnimeSongDetailsList()
     })
 }
 
 function updateAllAnimeSongDetailsList() {
+    let filter = expandLibrary.library.filterApplier.currentFilter
+    filter.watchedStatus.unwatched = !shoulUseWatched()
+    expandLibrary.library.filterApplier.applyBaseFilter(filter)
+    amqList = expandLibrary.library.filterApplier.filteredEntries.map(anime => anime.animeEntry)
     allAnimeSongDetailsList = []
 
     if (allListStatusesAllowed() == false && anilist == undefined) {
@@ -249,6 +252,15 @@ function shouldAutoplayOnLaunch() {
 
 function changeAutoplayOnLaunchSetting() {
     toggleCookie("shouldAutoplayOnLaunch")
+}
+
+function changeWatchedPreference() {
+    toggleCookie("useWatchedOnly")
+    updateAllAnimeSongDetailsList()
+}
+
+function shoulUseWatched() {
+    return isCookieEnabled("useWatchedOnly")
 }
 
 function shouldFilterOutOpenings() {
@@ -672,6 +684,7 @@ function createRadioSettingsBody() {
     settingsTable.style.cssText = radioSettingsTableStyle()
 
     createAutoplayOnLaunchSetting(settingsTable.insertRow(-1))
+    createWatchedPreferenceSetting(settingsTable.insertRow(-1))
     createSongTypeFilterSettings(settingsTable.insertRow(-1))
     //createListStatusFilterSettings(settingsTable.insertRow(-1))
     //createListStatusFilterSettings2(settingsTable.insertRow(-1))
@@ -684,6 +697,12 @@ function createAutoplayOnLaunchSetting(row) {
     row.insertCell(0).append(createSettingLabel("Autoplay after loading"))
     row.cells[0].colSpan = "5"
     row.insertCell(1).append(createCheckbox("autoplayOnLaunchCheckbox", shouldAutoplayOnLaunch(), changeAutoplayOnLaunchSetting))
+}
+
+function createWatchedPreferenceSetting(row) {
+    row.insertCell(0).append(createSettingLabel("Watched only"))
+    row.cells[0].colSpan = "5"
+    row.insertCell(1).append(createCheckbox("watchedOnlyCheckbox", shoulUseWatched(), changeWatchedPreference))
 }
 
 function createSongTypeFilterSettings(row) {
